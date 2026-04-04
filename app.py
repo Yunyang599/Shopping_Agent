@@ -54,6 +54,7 @@ st.markdown("""
     font-size: 1rem !important;
     border: 2px solid #ddd !important;
     background: white !important;
+    color: #1a1a2e !important;
     box-shadow: 0 2px 12px rgba(0,0,0,0.06) !important;
 }
 .stTextInput input:focus {
@@ -268,13 +269,17 @@ def fetch_live_products(search_query: str, max_results: int = 8) -> list[dict]:
     return products
 
 
-def fetch_ai_products(query_info: dict) -> list[dict]:
+def fetch_ai_products(query_info: dict, original_query: str = "") -> list[dict]:
+    search_q = query_info.get('search_query') or original_query
+    product_type = query_info.get('product_type') or original_query
     prompt = (
-        f"The user wants: {query_info.get('product_type')}. "
-        f"Use case: {query_info.get('use_case')}. "
-        f"Budget: {query_info.get('budget') or 'not specified'}. "
-        f"Desired features: {', '.join(query_info.get('key_features', []))}. "
-        "Suggest 6 specific, real, currently-sold products. "
+        f"The user is shopping for: '{search_q}'.\n"
+        f"Product type: {product_type}\n"
+        f"Use case: {query_info.get('use_case')}.\n"
+        f"Budget: {query_info.get('budget') or 'not specified'}.\n"
+        f"Desired features: {', '.join(query_info.get('key_features', []))}.\n\n"
+        f"List 6 specific real products that are EXACTLY '{search_q}' or directly related to '{search_q}'. "
+        "Do NOT suggest unrelated products. "
         "Return a JSON object with a 'products' array. "
         "Each item must have: title, price (string with currency symbol), "
         "source (retailer name), rating (float 1-5 or null), reviews (integer or null), "
@@ -418,7 +423,7 @@ if search and query:
 
     if not products:
         with st.spinner("Generating product suggestions with AI…"):
-            products = fetch_ai_products(query_info)
+            products = fetch_ai_products(query_info, query)
 
     if not products:
         st.error("No products found. Try a different description.")
