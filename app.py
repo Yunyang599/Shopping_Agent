@@ -55,6 +55,7 @@ st.markdown("""
     border: 2px solid #ddd !important;
     background: white !important;
     color: #1a1a2e !important;
+    caret-color: #667eea !important;
     box-shadow: 0 2px 12px rgba(0,0,0,0.06) !important;
 }
 .stTextInput input:focus {
@@ -263,7 +264,7 @@ def fetch_live_products(search_query: str, max_results: int = 8) -> list[dict]:
             "source":    item.get("source", ""),
             "rating":    item.get("rating"),
             "reviews":   item.get("reviews"),
-            "link":      item.get("link", ""),
+            "link":      item.get("link") or item.get("product_link") or "",
             "thumbnail": item.get("thumbnail", ""),
         })
     return products
