@@ -31,6 +31,9 @@ st.markdown("""
 #MainMenu, footer, header { visibility: hidden; }
 .stAppDeployButton { display: none; }
 [data-testid="manage-app-button"] { display: none; }
+[data-testid="stToolbar"] { display: none !important; }
+[data-testid="stStatusWidget"] { display: none !important; }
+[data-testid="stDecoration"] { display: none !important; }
 iframe[title="streamlit_cloud_sharelink"] { display: none !important; }
 
 .stApp { background: #f0f2f6; }
