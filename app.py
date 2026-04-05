@@ -5,6 +5,7 @@ Run with:  streamlit run app.py
 """
 
 import os
+import re
 import json
 import requests
 import streamlit as st
@@ -187,6 +188,9 @@ div[data-testid="stButton"] > button:hover {
     font-size: 0.95rem;
 }
 
+/* ── Spinner text ── */
+[data-testid="stSpinner"] p, .stSpinner p { color: #333 !important; }
+
 /* ── Section label ── */
 .section-label {
     font-size: 1.25rem;
@@ -264,16 +268,38 @@ def fetch_live_products(search_query: str, max_results: int = 8) -> list[dict]:
 
     products = []
     for item in data.get("shopping_results", [])[:max_results]:
+        raw_source = item.get("source", "")
+        clean_source = re.sub(r"<[^>]+>", "", raw_source).strip()
         products.append({
             "title":     item.get("title", "Unknown"),
             "price":     item.get("price", "N/A"),
-            "source":    item.get("source", ""),
+            "source":    clean_source,
             "rating":    item.get("rating"),
             "reviews":   item.get("reviews"),
             "link":      item.get("link") or item.get("product_link") or "",
             "thumbnail": item.get("thumbnail", ""),
         })
     return products
+
+
+def parse_price(price_str) -> float | None:
+    """Extract a numeric value from a price string like '$1,295.00'."""
+    if not price_str or price_str == "N/A":
+        return None
+    nums = re.findall(r"[\d]+\.?\d*", price_str.replace(",", ""))
+    return float(nums[0]) if nums else None
+
+
+def filter_by_budget(products: list[dict], budget_str: str | None) -> list[dict]:
+    """Remove products that exceed the stated budget."""
+    if not budget_str:
+        return products
+    nums = re.findall(r"[\d]+\.?\d*", budget_str.replace(",", ""))
+    if not nums:
+        return products
+    max_price = float(nums[-1])  # use last number (e.g. "under 1500" → 1500)
+    return [p for p in products if parse_price(p.get("price")) is None
+            or parse_price(p.get("price")) <= max_price]
 
 
 def fetch_ai_products(query_info: dict, original_query: str = "") -> list[dict]:
@@ -425,12 +451,14 @@ if search and query:
     if SERPAPI_KEY:
         with st.spinner("Fetching live products from Google Shopping…"):
             products = fetch_live_products(label)
+        products = filter_by_budget(products, query_info.get("budget"))
         if not products:
             st.info("Live search returned no results — switching to AI suggestions.")
 
     if not products:
         with st.spinner("Generating product suggestions with AI…"):
             products = fetch_ai_products(query_info, query)
+        products = filter_by_budget(products, query_info.get("budget"))
 
     if not products:
         st.error("No products found. Try a different description.")
