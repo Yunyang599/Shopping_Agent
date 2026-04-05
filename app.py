@@ -407,9 +407,10 @@ def product_card(p: dict, idx: int) -> str:
     # Store
     store_html = f'<div class="product-store">🏪 {source}</div>' if source else ""
 
-    # Button
+    # Button — escape & in URLs so HTML doesn't break
+    safe_link = link.replace("&", "&amp;")
     btn = (
-        f'<a href="{link}" target="_blank" class="btn-view">View Product →</a>'
+        f'<a href="{safe_link}" target="_blank" class="btn-view">View Product →</a>'
         if link
         else '<span class="btn-nolink">No link available</span>'
     )
