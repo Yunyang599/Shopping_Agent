@@ -29,6 +29,9 @@ st.set_page_config(
 st.markdown("""
 <style>
 #MainMenu, footer, header { visibility: hidden; }
+.stAppDeployButton { display: none; }
+[data-testid="manage-app-button"] { display: none; }
+iframe[title="streamlit_cloud_sharelink"] { display: none !important; }
 
 .stApp { background: #f0f2f6; }
 
